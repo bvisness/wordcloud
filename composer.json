@@ -1,5 +1,5 @@
 {
-    "name": "bvisness/WordCloud",
+    "name": "bvisness/wordcloud",
     "description": "A PHP application for generating word clouds.",
     "type": "project",
     "license": "MIT",
