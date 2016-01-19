@@ -2,30 +2,38 @@
 
 namespace WordCloud\Service;
 
+use Equip\Env;
 use WordCloud\Model\Rectangle;
 
 class CloudMaker
 {
-    private $fontfile = './OpenSans-Regular.ttf';
+    private $env;
 
     const SPIRAL_STEPS = 2000;
 
+    public function __construct(Env $env) {
+        $this->env = $env;
+    }
+
     public function makeCloud($width, $height, $outputPath, array $sortedWords, $debug = false) {
+        $tmpDirectoryPath = dirname(dirname(__DIR__)) . '/tmp/';
+        if (!is_dir($tmpDirectoryPath)) {
+            mkdir($tmpDirectoryPath);
+        }
+
+        $fontUrl = $this->env['STATIC_HOSTING_URL'] . 'fonts/' . $this->env['FONT_FILE'];
+        $fontfile = $tmpDirectoryPath . uniqid();
+        file_put_contents($fontfile, fopen($fontUrl, 'r'));
+
         // Calculate bounding boxes for words and sum up area
         $rectangles = [];
         $area = 0;
         foreach ($sortedWords as $word => $count) {
-            $bbox = imagettfbbox($count, 0, $this->fontfile, $word);
+            $bbox = imagettfbbox($count, 0, $fontfile, $word);
             if ($bbox === false) {
                 throw new \Exception("Error getting bounding box for string `$word` with fontfile `$fontfile`.");
             }
 
-            // $rectangles[$word] = new Rectangle(
-            //     0,
-            //     0,
-            //     $bbox[2] - $bbox[6], // Lower right x - upper left x
-            //     $bbox[3] - $bbox[7]  // Lower right y - upper left y
-            // );
             $rectangles[$word] = new Rectangle(
                 $bbox[0],
                 $bbox[1],
@@ -105,9 +113,9 @@ class CloudMaker
                 $sortedWords[$word] * $scaleFactor, // size
                 0, // angle
                 ($placed->x1 - $minX) * $scaleFactor, // x
-                ($placed->y2 - $rectangles[$word]->y1 - $minY) * $scaleFactor, // y (maybe bad?)
+                ($placed->y2 - $rectangles[$word]->y1 - $minY) * $scaleFactor, // y
                 $black, // color
-                $this->fontfile, // fontfile
+                $fontfile, // fontfile
                 $word // text
             );
             if ($debug) {
@@ -132,8 +140,20 @@ class CloudMaker
             );
         }
 
-        imagepng($image, $outputPath);
+        // Output the image
+        if (!is_dir($outputPath)) {
+            mkdir($outputPath);
+        }
+
+        $imageId = uniqid();
+        $imageUrl = "$outputPath/$imageId.png";
+        imagepng($image, $imageUrl);
         imagedestroy($image);
+
+        // Delete the font
+        unlink($fontfile);
+
+        return $imageUrl;
     }
 
     private function randFloat() {

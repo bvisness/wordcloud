@@ -4,7 +4,8 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "equip/framework": "^1.0"
+        "equip/framework": "^1.0",
+        "josegonzalez/dotenv": "^1.2"
     },
     "autoload": {
         "psr-4": {

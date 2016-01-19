@@ -11,6 +11,7 @@ Equip\Application::build()
     Equip\Configuration\DiactorosConfiguration::class,
     Equip\Configuration\PayloadConfiguration::class,
     Equip\Configuration\RelayConfiguration::class,
+    Equip\Configuration\EnvConfiguration::class,
     Equip\Configuration\WhoopsConfiguration::class,
 ])
 ->setMiddleware([
