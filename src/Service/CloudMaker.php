@@ -11,11 +11,13 @@ class CloudMaker
 
     const SPIRAL_STEPS = 2000;
 
-    public function __construct(Env $env) {
+    public function __construct(Env $env)
+    {
         $this->env = $env;
     }
 
-    public function makeCloud($width, $height, $outputPath, array $sortedWords, $debug = false) {
+    public function makeCloud($width, $height, $outputPath, array $sortedWords, $debug = false)
+    {
         $tmpDirectoryPath = dirname(dirname(__DIR__)) . '/tmp/';
         if (!is_dir($tmpDirectoryPath)) {
             mkdir($tmpDirectoryPath);
@@ -119,7 +121,7 @@ class CloudMaker
                 $word // text
             );
             if ($debug) {
-                imagerectangle (
+                imagerectangle(
                     $image,
                     ($placed->x1 - $minX) * $scaleFactor,
                     ($placed->y1 - $minY) * $scaleFactor,
@@ -130,7 +132,7 @@ class CloudMaker
             }
         }
         if ($debug) {
-            imagerectangle (
+            imagerectangle(
                 $image,
                 ($playingField->x1 - $minX) * $scaleFactor,
                 ($playingField->y1 - $minY) * $scaleFactor,
@@ -156,15 +158,18 @@ class CloudMaker
         return $imageUrl;
     }
 
-    private function randFloat() {
+    private function randFloat()
+    {
         return (float)mt_rand() / (float)mt_getrandmax();
     }
 
-    private function randFloatMinMax($min, $max) {
+    private function randFloatMinMax($min, $max)
+    {
         return $this->randFloat() * ($max - $min);
     }
 
-    private function rectIntersects($rectangle, $rectangles) {
+    private function rectIntersects($rectangle, $rectangles)
+    {
         foreach ($rectangles as $otherRectangle) {
             if ($rectangle === $otherRectangle) {
                 continue;
@@ -178,7 +183,8 @@ class CloudMaker
         return false;
     }
 
-    private function spiralOffset($t, $revolutions, $radius) {
+    private function spiralOffset($t, $revolutions, $radius)
+    {
         $distance = $radius * $t;
         $angle = 2 * M_PI * $revolutions * $t;
 
