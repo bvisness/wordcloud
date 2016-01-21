@@ -4,6 +4,7 @@
     "type": "project",
     "license": "MIT",
     "require": {
+        "bvisness/geometry": "^0.1",
         "equip/framework": "^1.0",
         "josegonzalez/dotenv": "^1.2"
     },

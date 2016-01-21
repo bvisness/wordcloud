@@ -3,7 +3,7 @@
 namespace WordCloud\Service;
 
 use Equip\Env;
-use WordCloud\Model\Rectangle;
+use Geometry\Rectangle;
 
 class CloudMaker
 {
