@@ -8,14 +8,15 @@ class WordCount
 {
     private $env;
 
-    public function __construct(Env $env) {
+    public function __construct(Env $env)
+    {
         $this->env = $env;
     }
 
     public function countWords($text)
     {
         $words = [];
-        preg_match_all("/(\w|')+/", $text, $words);
+        preg_match_all("/[a-zA-Z']+/", $text, $words);
 
         $wordcounts = [];
         foreach (current($words) as $word) {
