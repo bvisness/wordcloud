@@ -4,6 +4,7 @@ namespace WordCloud\Service;
 
 use Equip\Env;
 use Geometry\Rectangle;
+use Quadtree\Quadtree;
 
 class CloudMaker
 {
@@ -31,41 +32,51 @@ class CloudMaker
         $rectangles = [];
         $area = 0;
         foreach ($sortedWords as $word => $count) {
-            $bbox = imagettfbbox($count, 0, $fontfile, $word);
+            $bbox = imagettfbbox($this->fontSizeForCount($count), 0, $fontfile, $word);
             if ($bbox === false) {
                 throw new \Exception("Error getting bounding box for string `$word` with fontfile `$fontfile`.");
             }
 
-            $rectangles[$word] = new Rectangle(
+            $bboxRect = new Rectangle(
                 $bbox[0],
                 $bbox[1],
                 $bbox[4],
-                -$bbox[5]
+                $bbox[5]
+            );
+
+            $rectangles[$word] = new Rectangle(
+                $bboxRect->x1,
+                $bboxRect->y1,
+                $bboxRect->x1 + $bboxRect->width(),
+                $bboxRect->y1 + $bboxRect->height()
             );
 
             $area += $rectangles[$word]->area();
         }
+        $fudgedArea = $area * 1.5;
 
         // Calculate playing field
         $pfAspect = $width / $height;
-        $pfWidth = sqrt($area * $pfAspect);
-        $pfHeight = $area / $pfWidth;
+        $pfWidth = sqrt($fudgedArea * $pfAspect);
+        $pfHeight = $fudgedArea / $pfWidth;
         $playingField = new Rectangle(0, 0, $pfWidth, $pfHeight);
 
         // Place rectangles into the cloud
+        $quad = new Quadtree($playingField);
         $placedRectangles = [];
         foreach ($rectangles as $word => $rectangle) {
             $posX = $this->randFloatMinMax(0, $playingField->width() - $rectangle->width()) - $rectangle->x1;
             $posY = $this->randFloatMinMax(0, $playingField->height() - $rectangle->height()) - $rectangle->y1;
 
-            $placed = $rectangle->translated($posX, $posY);
+            // $placed = $rectangle->translated($posX, $posY);
+            $placed = $rectangle->translated($pfWidth / 2, $pfHeight / 2);
             $originalPlaced = clone $placed;
 
             $loopCount = 0;
-            while ($this->rectIntersects($placed, $placedRectangles)) {
+            while ($this->rectIntersects($placed, $quad->retrieve($placed))) {
                 do {
                     $t = $loopCount / self::SPIRAL_STEPS;
-                    list($spiralX, $spiralY) = $this->spiralOffset($t, 20, 20 * $sortedWords[$word]);
+                    list($spiralX, $spiralY) = $this->spiralOffset($t, 20, 20 * $this->fontSizeForCount($sortedWords[$word]));
 
                     $placed = $originalPlaced->translated($spiralX, $spiralY);
                     $loopCount++;
@@ -73,6 +84,7 @@ class CloudMaker
             }
 
             $placedRectangles[$word] = $placed;
+            $quad->insert($placed);
         }
 
         // Find the min and max coordinates of placed rectangles
@@ -112,7 +124,7 @@ class CloudMaker
         foreach ($placedRectangles as $word => $placed) {
             imagettftext(
                 $image,
-                $sortedWords[$word] * $scaleFactor, // size
+                $this->fontSizeForCount($sortedWords[$word]) * $scaleFactor, // size
                 0, // angle
                 ($placed->x1 - $minX) * $scaleFactor, // x
                 ($placed->y2 - $rectangles[$word]->y1 - $minY) * $scaleFactor, // y
@@ -156,6 +168,11 @@ class CloudMaker
         unlink($fontfile);
 
         return $imageUrl;
+    }
+
+    private function fontSizeForCount($count)
+    {
+        return $count * 20;
     }
 
     private function randFloat()
